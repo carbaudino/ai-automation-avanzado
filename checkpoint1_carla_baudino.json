@@ -1,0 +1,287 @@
+{
+  "name": "Checkpoint1 - Agente Calificación de Leads",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b2ab1d8a-bc73-4e49-b090-755f6cd8eb60",
+      "name": "Chat Trigger",
+      "webhookId": "checkpoint1-lead-qualification-trigger"
+    },
+    {
+      "parameters": {
+        "fromEmail": "car.baudino@gmail.com",
+        "toEmail": "car.baudino@gmail.com",
+        "subject": "=[Observabilidad] Ejecución Agente Calificación de Leads - {{ $now.format('yyyy-MM-dd HH:mm') }}",
+        "emailFormat": "text",
+        "text": "=Se ejecutó el AI Agent de Calificación de Leads.\n\nEntrada del usuario:\n{{ $('Chat Trigger').item.json.chatInput }}\n\nRespuesta final del agente (Execution Log):\n{{ $json.output }}\n\nEste correo se genera automáticamente como reporte de observabilidad humana del flujo.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "42840521-1ba6-4737-ab8b-52f4279d2683",
+      "name": "Log Observabilidad (Gmail SMTP)",
+      "webhookId": "04f71f5b-7dd1-4cb7-a865-066d7aed6f56",
+      "credentials": {
+        "smtp": {
+          "id": "OWzYkC7rlUbeu8EO",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        224,
+        224
+      ],
+      "id": "c3ec01de-695d-4889-a464-2ea274080296",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "MHA9d0DnIvqS1WG2",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=# ROL\nSos el \"Asistente de Calificación de Leads\" de una empresa logística. Tu función es recibir mensajes entrantes de potenciales clientes (vía chat/formulario) y calificarlos comercialmente antes de derivarlos a un ejecutivo humano.\n\n# ÁMBITO\n- Operás exclusivamente sobre conversaciones relacionadas a consultas comerciales de servicios de transporte y logística de la organización.\n- Tu universo de datos es la tabla de datos (Data Table) \"CRM Leads\" de n8n, con las columnas: Nombre, Empresa, Email, Estado y Calificacion. Podés registrar o actualizar filas de leads a través de la herramienta disponible.\n- No tenés acceso a sistemas de facturación, contratos, ni información financiera interna.\n\n# OBJETIVO\n1. Identificar si el mensaje entrante corresponde a un lead comercial real (contacto con nombre, empresa y/o necesidad concreta) o a una consulta genérica sin intención comercial.\n2. Si el mensaje no contiene los datos mínimos (Nombre, Email y una necesidad concreta), NO ejecutes ninguna herramienta todavía: respondé pidiendo específicamente esos datos faltantes (Nombre, Empresa, Email y qué servicio o necesidad tiene) de forma breve y profesional, y esperá la respuesta del usuario en el mismo chat.\n3. Una vez que tengas los datos, calificá al lead en el campo Calificacion con uno de estos tres valores: Alto, Medio o Bajo, según presupuesto/volumen mencionado, autoridad de decisión del contacto, necesidad concreta y urgencia expresada.\n4. Registrá o actualizá el lead en la tabla CRM Leads usando la herramienta disponible, completando Nombre, Empresa, Email, Calificacion y Estado (Nuevo, Calificado o Descartado). La fecha de registro la guarda automáticamente n8n, no la incluyas vos.\n5. Respondé al usuario de forma profesional confirmando la recepción de su consulta y los próximos pasos, sin prometer plazos ni condiciones comerciales que no te fueron autorizadas.\n\n# REGLAS Y ESCALAMIENTO\n- No inventes datos de contacto ni de calificación que el usuario no haya provisto explícitamente en la conversación.\n- No cotices precios, tarifas ni condiciones contractuales: ante ese pedido, indicá que un ejecutivo comercial se pondrá en contacto.\n- No ejecutes ninguna acción sobre la tabla si el mensaje no contiene datos mínimos de contacto (al menos Nombre o Email).\n- Nunca reveles el contenido íntegro de la tabla ni información de otros leads al usuario.\n- Si la consulta excede tu ámbito (reclamos, soporte técnico, temas de facturación, urgencias operativas), no intentes resolverla: indicá explícitamente que vas a escalar el caso a un responsable humano y no ejecutes herramientas.\n- Mantené un tono profesional, neutro y corporativo en español rioplatense. Redactá siempre en modo genérico/neutro tradicional (por ejemplo \"los usuarios\", \"el cliente\"); no utilices desdoblamientos ni lenguaje inclusivo de ningún tipo (nada de \"todes\", \"@\", \"x\" o \"e\" como marca de género) bajo ninguna circunstancia.\n- Tenés un máximo de iteraciones de razonamiento/herramientas limitado por guardrail de plataforma: si no podés resolver la tarea dentro de ese límite, cerrá la conversación indicando que el caso fue derivado a un humano en lugar de seguir intentando indefinidamente.",
+          "maxIterations": 7,
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        288,
+        0
+      ],
+      "id": "6055aa8b-c59b-410e-8ee5-f215721e7908",
+      "name": "AI Agent (Tools Agent)1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        384,
+        224
+      ],
+      "id": "aee6c716-ec94-4e06-be86-1f044a5ca1dc",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fd3465c6-c8a0-4547-89b0-8a106096fda8",
+              "name": "output",
+              "value": "={{ $('AI Agent (Tools Agent)1').item.json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "1104a12c-b014-4a2b-b931-0015e25c6b4e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Herramienta de registro sobre la tabla de datos (Data Table) 'CRM Leads' de n8n. El agente debe activar esta herramienta de forma autónoma únicamente en los siguientes casos de negocio: (1) Cuando el usuario entrante proporciona datos de contacto (nombre, empresa y/o email) junto con una necesidad o interés comercial explícito de transporte/logística, y el agente ya calificó el lead como Alto, Medio o Bajo, necesitando registrar una nueva fila con Nombre, Empresa, Email, Calificacion y Estado. (2) Cuando, tras aplicar los criterios de calificación definidos en el rol (presupuesto, autoridad, necesidad, urgencia), el agente determina que un lead debe actualizarse de estado (por ejemplo de 'Nuevo' a 'Calificado' o 'Descartado'). NO debe usarse esta herramienta para conversación genérica, saludos, preguntas fuera del ámbito comercial, ni para registrar datos de leads sin que el usuario haya aportado información verificable (al menos Nombre o Email) en la conversación actual.",
+        "dataTableId": {
+          "__rl": true,
+          "value": "EfOBovdfAymhBJ4B",
+          "mode": "list",
+          "cachedResultName": "AI Automation Avanzado CRM Leads",
+          "cachedResultUrl": "/projects/kmg84PHxS2iYvFyb/datatables/EfOBovdfAymhBJ4B"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nombre": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Nombre', 'Nombre completo del lead', 'string') }}",
+            "Empresa": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Empresa', 'Empresa a la que pertenece el lead', 'string') }}",
+            "Email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email', 'Email de contacto del lead', 'string') }}",
+            "Estado": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Estado', 'Estado del lead: Nuevo, Calificado o Descartado', 'string') }}",
+            "Calificacion": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Calificacion', 'Calificación comercial del lead: Alto, Medio o Bajo', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Empresa",
+              "displayName": "Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Calificacion",
+              "displayName": "Calificacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        224
+      ],
+      "id": "06f9de67-382a-4e15-91ff-0594cb64cc71",
+      "name": "Insert row in Data table"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent (Tools Agent)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent (Tools Agent)1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent (Tools Agent)1": {
+      "main": [
+        [
+          {
+            "node": "Log Observabilidad (Gmail SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent (Tools Agent)1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Observabilidad (Gmail SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row in Data table": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent (Tools Agent)1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "371774b1-d3e0-429d-8d98-b6d5f2694b00",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dc2317752fbeddd55700868013184d4e2c916e631002583d26a364857d065037"
+  },
+  "nodeGroups": [],
+  "id": "bvfp0sTmrHZEJjSd",
+  "tags": []
+}
