@@ -21,7 +21,7 @@
         "toEmail": "car.baudino@gmail.com",
         "subject": "=[Observabilidad] Ejecución Agente Calificación de Leads - {{ $now.format('yyyy-MM-dd HH:mm') }}",
         "emailFormat": "text",
-        "text": "=Se ejecutó el AI Agent de Calificación de Leads.\n\nEntrada del usuario:\n{{ $('Chat Trigger').item.json.chatInput }}\n\nRespuesta final del agente (Execution Log):\n{{ $json.output }}\n\nEste correo se genera automáticamente como reporte de observabilidad humana del flujo.",
+        "text": "=Se ejecutó el AI Agent de Calificación de Leads.\n\nEntrada del usuario:\n{{ $('Chat Trigger').item.json.chatInput }}\n\nPasos intermedios de razonamiento (Execution Log / ReAct):\n{{ $json.intermediateSteps ? $json.intermediateSteps.map((step, i) => `Paso ${i + 1}:\\n- Herramienta invocada: ${step.action?.tool ?? 'N/A'}\\n- Input enviado a la herramienta: ${JSON.stringify(step.action?.toolInput ?? {})}\\n- Observación devuelta: ${JSON.stringify(step.observation ?? '')}`).join('\\n\\n') : 'El agente no invocó ninguna herramienta en esta ejecución (resolvió con razonamiento directo).' }}\n\nRespuesta final del agente:\n{{ $json.output }}\n\nEste correo se genera automáticamente como reporte de observabilidad humana del flujo, incluyendo el detalle del ciclo de razonamiento y ejecución de herramientas (ReAct) para auditoría.",
         "options": {}
       },
       "type": "n8n-nodes-base.emailSend",
