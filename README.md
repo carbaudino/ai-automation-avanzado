@@ -38,3 +38,7 @@ Este flujo es la base que se va a ir ampliando en los próximos módulos del cur
 - **M5** — RAG / base documental (Vector store)
 - **M6** — Voz (STT / TTS)
 - ... hasta el **Proyecto Final Integrador (M11)**
+
+## Checkpoint 4 · Integraciones (Gmail + HubSpot + Slack)
+Canal de email con IF anti auto-reply, Look up en HubSpot antes de crear contactos, borradores con aprobación humana y aviso en Slack con payload mínimo.
+➡️ [Ver carpeta checkpoint4](checkpoint4/)
