@@ -1,6 +1,52 @@
 # AI Automation Avanzado — Proyecto Integrador
 
-Repositorio del proyecto integrador del curso **AI Automation Avanzado**. Contiene el flujo de n8n que se va ampliando módulo a módulo a lo largo de la cursada, partiendo siempre de la versión del checkpoint anterior.
+**Alumna:** Carla Baudino
+
+Este es el repositorio del proyecto integrador del curso **AI Automation Avanzado**: un agente de atención comercial y operativa para una empresa de transporte y logística (**Logística Demo S.A.**, ficticia), construido en **n8n**. Cada checkpoint parte del anterior y le suma una capacidad nueva, hasta llegar al Proyecto Final (M11).
+
+## Índice de checkpoints
+
+| # | Módulo | Qué suma al agente | Carpeta |
+|---|---|---|---|
+| 1 | Agente base y motor de razonamiento | AI Agent (Tools Agent) que califica leads y los registra en una Data Table, con guardrail de iteraciones y log de observabilidad | [`checkpoint1/`](checkpoint1/) |
+| 2 | Orquestación multi-agente | Patrón Manager-Worker: router de intención, 2 Workers como sub-workflows, contratos JSON, contingencia y trazabilidad | [`checkpoint2/`](checkpoint2/) |
+| 3 | Memoria persistente | Memoria de largo plazo en Airtable por `Session_ID`, inyección de contexto con delimitadores y summarization a partir de 5 mensajes | [`checkpoint3/`](checkpoint3/) |
+| 4 | Integraciones reales | Canal de email: Gmail (OAuth2), HubSpot y Slack, con IF anti auto-reply, Look up antes del Create y borradores con aprobación humana | [`checkpoint4/`](checkpoint4/) |
+| 5 | RAG / conocimiento organizacional | Manual de políticas parseado con LlamaParse, base de vectores con Top-K y Minimum Score calibrados, citación de fuentes y regla "No sé" | [`checkpoint5/`](checkpoint5/) |
+| 6 → 11 | Voz, … Proyecto Final | Próximamente | — |
+
+**Convención del repo:** cada checkpoint vive en su propia carpeta, con una única copia de sus `.json` de n8n, su README y sus evidencias.
+
+## Evolución de la arquitectura
+
+```
+M1  Chat ─▶ AI Agent (calificación de leads) ─▶ Data Table + log Gmail
+M2  Chat ─▶ Router de intención ─▶ Worker Leads / Worker Reclamos / escalamiento humano ─▶ log
+M3  + memoria Airtable (lectura antes del router, escritura y resumen después de responder)
+M4  Email ─▶ IF anti auto-reply ─▶ AI Agent ─▶ HubSpot (Look up → Update/Create) ─▶ Borrador Gmail ─▶ Slack
+M5  + herramienta buscar_manual_politicas (RAG) conectada al AI Agent del canal email
+```
+
+## Stack
+
+| Rol | Herramienta |
+|---|---|
+| Orquestación | n8n (self-hosted) |
+| LLM | Groq · `openai/gpt-oss-120b` (agentes) y `openai/gpt-oss-20b` (resumidor) |
+| Memoria de largo plazo | Airtable (base *Memoria Agente*, tabla *Sesiones*) |
+| CRM | HubSpot (Service Key con scopes de contactos) |
+| Correo | Gmail (OAuth2) · SMTP para logs |
+| Mensajería del equipo | Slack (bot con `chat:write`) |
+| Parseo documental | LlamaParse (LlamaCloud) |
+| Embeddings / vectores | Google Gemini `gemini-embedding-001` · Simple Vector Store de n8n |
+
+## Cómo importar cualquier checkpoint
+
+1. En n8n, ir a **Workflows → Import from File** y elegir el `.json` de la carpeta del checkpoint.
+2. Asignar las credenciales propias en cada nodo marcado en rojo. Los `.json` no incluyen secretos: solo referencian credenciales por nombre.
+3. Cuando un checkpoint tiene sub-workflows, importarlos primero, elegirlos en el nodo que los llama y **publicarlos**.
+
+---
 
 ## Checkpoint 1 — Agente Base y Motor de Razonamiento
 
@@ -8,37 +54,41 @@ Repositorio del proyecto integrador del curso **AI Automation Avanzado**. Contie
 
 ### Propósito operativo
 
-Este flujo implementa la primera versión del **Asistente de Calificación de Leads**, un agente conversacional pensado para una empresa de transporte y logística. Su función es recibir consultas comerciales entrantes por chat, identificar si corresponden a un lead real, pedir los datos de contacto faltantes cuando el mensaje es genérico, calificar comercialmente al lead (Alto / Medio / Bajo) y registrar esa información de forma autónoma, sin intervención humana en el camino feliz.
+Este flujo implementa la primera versión del **Asistente de Calificación de Leads**, un agente conversacional para una empresa de transporte y logística. Recibe consultas comerciales por chat e identifica si corresponden a un lead real. Si el mensaje es genérico, pide los datos de contacto que faltan. Después califica comercialmente al lead (Alto / Medio / Bajo) y registra la información de forma autónoma, sin intervención humana en el camino feliz.
 
 ### Arquitectura del flujo
 
-- **Chat Trigger**: captura el mensaje inicial desestructurado del usuario y sostiene la conversación de varios turnos dentro de una misma sesión.
-- **AI Agent (Tools Agent)**: nodo central de razonamiento, en modo *Tools Agent*, conectado a un modelo de lenguaje vía **Groq Chat Model** (`openai/gpt-oss-120b`). Incluye:
-  - **System Prompt modular** (Rol → Ámbito → Objetivo → Reglas y Escalamiento) que define el rol operativo del agente, qué datos puede manejar y qué acciones tiene explícitamente prohibidas (no cotizar precios, no inventar datos, no salirse de su ámbito comercial).
-  - **Guardrail de iteraciones**: `maxIterations` fijado en 7 (dentro del rango de 5 a 10 exigido), para blindar el flujo contra bucles lógicos infinitos.
-  - **Memoria de conversación** (`Simple Memory`, buffer de ventana), para que el agente recuerde los datos que el usuario ya aportó en turnos anteriores del mismo chat.
-- **Insert row in Data table** (herramienta lateral, no secuencial): conectada como extensión del agente vía el puerto *Tool*. Registra cada lead calificado en una tabla de datos nativa de n8n (Nombre, Empresa, Email, Estado, Calificación). Tiene una descripción de negocio extensa que le indica al modelo en qué casos exactos debe activarla de forma autónoma.
-- **Log Observabilidad (Gmail SMTP)**: nodo final de notificación que envía por mail un reporte de auditoría de cada ejecución, incluyendo tanto los pasos intermedios de razonamiento del agente (qué herramienta invocó, con qué datos, y qué observó) como la respuesta final — actuando como reporte automático de supervisión humana.
-- **Edit Fields**: normaliza la salida final para que la interfaz de chat muestre la respuesta conversacional del agente y no el detalle técnico del envío del mail.
+- **Chat Trigger**: captura el mensaje inicial desestructurado y sostiene la conversación de varios turnos dentro de una misma sesión.
+- **AI Agent (Tools Agent)**: nodo central de razonamiento, conectado al modelo vía **Groq Chat Model** (`openai/gpt-oss-120b`). Incluye:
+  - **System Prompt modular** (Rol → Ámbito → Objetivo → Reglas y Escalamiento), que define el rol operativo, los datos que puede manejar y las acciones prohibidas: no cotizar precios, no inventar datos, no salirse de su ámbito comercial.
+  - **Guardrail de iteraciones**: `maxIterations` en 7, dentro del rango de 5 a 10 exigido, para evitar bucles infinitos.
+  - **Memoria de conversación** (`Simple Memory`), para recordar los datos aportados en turnos anteriores del mismo chat.
+- **Insert row in Data table** (herramienta del agente): registra cada lead calificado (Nombre, Empresa, Email, Estado, Calificación). Su descripción de negocio le indica al modelo en qué casos exactos activarla.
+- **Log Observabilidad (Gmail SMTP)**: envía por mail un reporte de cada ejecución, con los pasos intermedios del razonamiento y la respuesta final.
+- **Edit Fields**: normaliza la salida para que el chat muestre la respuesta del agente y no el detalle técnico del envío del mail.
 
 ### Cómo probarlo
 
-1. Importar el `.json` en una instancia de n8n.
-2. Configurar las credenciales propias: Groq (modelo de lenguaje), SMTP de Gmail (con contraseña de aplicación) y la tabla de datos de destino.
-3. Abrir el chat de test y enviar un mensaje genérico (ej. "hola, quiero info sobre sus servicios"): el agente debe responder pidiendo los datos faltantes.
-4. Responder con nombre, empresa, email y una necesidad concreta: el agente debe calificar el lead, registrarlo en la tabla y enviar el mail de observabilidad con el detalle del razonamiento.
+1. Importar el `.json` y configurar las credenciales: Groq, SMTP de Gmail (con contraseña de aplicación) y la tabla de datos de destino.
+2. Enviar por el chat un mensaje genérico (por ejemplo, "hola, quiero info sobre sus servicios"): el agente debe pedir los datos que faltan.
+3. Responder con nombre, empresa, email y una necesidad concreta: el agente debe calificar el lead, registrarlo y enviar el mail de observabilidad.
 
-### Roadmap del proyecto integrador
+## Checkpoint 2 — Orquestación Multi-Agente
 
-Este flujo es la base que se va a ir ampliando en los próximos módulos del curso:
+Un **Manager** clasifica la intención (`LEAD_COMERCIAL`, `RECLAMO_OPERATIVO` u `other`) y delega con **Execute Workflow** ("Wait For Sub-Workflow Completion" activado) en dos **Workers** independientes. Cada Worker devuelve siempre el mismo contrato `{status, worker, request_id, data | error}`, también ante fallas. Los casos dudosos se escalan a un supervisor humano y cada delegación queda registrada en un log de trazabilidad.
+➡️ [Ver carpeta checkpoint2](checkpoint2/)
 
-- **M2** — Multi-agente (Manager + Workers como sub-workflows)
-- **M3** — Memoria y contexto persistente (Airtable por Session_ID)
-- **M4** — Integraciones reales (CRM / Calendario / Workspace vía OAuth2)
-- **M5** — RAG / base documental (Vector store)
-- **M6** — Voz (STT / TTS)
-- ... hasta el **Proyecto Final Integrador (M11)**
+## Checkpoint 3 — Memoria Persistente y Summarization
 
-## Checkpoint 4 · Integraciones (Gmail + HubSpot + Slack)
+Lectura de Airtable por `Session_ID` antes del router, con un IF para usuarios nuevos. El contexto se inyecta entre `[INICIO DE CONTEXTO COMPARTIDO]` y `[FIN DEL CONTEXTO COMPARTIDO]`. A partir del 6.º mensaje, un modelo económico genera un resumen JSON que sobreescribe la fila de la sesión de forma idempotente.
+➡️ [Ver carpeta checkpoint3](checkpoint3/)
+
+## Checkpoint 4 — Integraciones (Gmail + HubSpot + Slack)
+
 Canal de email con IF anti auto-reply, Look up en HubSpot antes de crear contactos, borradores con aprobación humana y aviso en Slack con payload mínimo.
 ➡️ [Ver carpeta checkpoint4](checkpoint4/)
+
+## Checkpoint 5 — RAG: Agente con Conocimiento Organizacional
+
+El agente de email consulta el manual de políticas de la empresa, parseado con LlamaParse y fragmentado por sección, a través de la herramienta `buscar_manual_politicas` (Top-K 3, Minimum Score 0,68). Responde solo con los fragmentos recuperados, cita la fuente y dice "No sé" cuando el dato no está. Precisión en la prueba ciega: 5/5.
+➡️ [Ver carpeta checkpoint5](checkpoint5/)
