@@ -1,0 +1,558 @@
+{
+  "name": "Checkpoint 5 - Base de Conocimiento RAG (Manual de Políticas)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## A · Ingesta del documento (se ejecuta a mano)\nFuente: salida Markdown de **LlamaParse** (Cost-Effective) del manual MAN-SC-001 v3.1, ya limpia: sin encabezados/pies de página, tabla partida unida, títulos normalizados y tablas HTML → Markdown.\n**Chunking semántico:** 1 fragmento por sección (`## N.`), con su título y sus tablas completas (13 fragmentos, < 1.000 caracteres c/u).",
+        "height": 700,
+        "width": 1420,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        16
+      ],
+      "id": "f1b4a45c-ac37-4ed7-ab85-5d796e1c9c55",
+      "name": "Nota ae6e"
+    },
+    {
+      "parameters": {
+        "content": "## B · Vector Store Retrieve Tool (sub-workflow que usa el agente)\n**Top-K** y **Minimum Score** se configuran en el nodo *Parámetros RAG*. Solo vuelven al agente los fragmentos que superan el umbral; si ninguno lo supera, devuelve SIN_FRAGMENTOS_RELEVANTES y el agente aplica la regla \"No sé\".",
+        "height": 640,
+        "width": 1420,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        784
+      ],
+      "id": "8181a155-f0ec-4e42-9dab-bd703f71e1fd",
+      "name": "Nota 2f65"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        400
+      ],
+      "id": "e06557da-2861-4f7f-8a85-91dc9b7a729c",
+      "name": "Ejecutar Ingesta"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "734d8a66-416a-4ce0-a82f-04def3e0d9f7",
+              "name": "manual",
+              "value": "# Manual de Políticas y Procedimientos de Servicio · Logística Demo S.A. (MAN-SC-001 v3.1)\n\nTransporte de cargas generales y refrigeradas · Argentina\n\n| Dato | Valor |\n|---|---|\n| Código del documento | MAN-SC-001 |\n| Versión | 3.1 |\n| Vigencia | Desde el 1 de octubre de 2026 |\n| Área responsable | Gerencia de Operaciones y Atención al Cliente |\n| Próxima revisión | 1 de abril de 2027 |\n| Clasificación | Uso externo: puede compartirse con clientes |\n\nDocumento ficticio elaborado con fines educativos para el curso AI Automation Avanzado. Cualquier coincidencia con empresas reales es casual.\n\n## 1. Objetivo y alcance\n\nEste manual reúne las políticas comerciales y operativas que Logística Demo S.A. (en adelante, \"la Empresa\") aplica a todos los servicios de transporte que presta dentro de la República Argentina. Es la única fuente oficial para responder consultas de clientes y para que el equipo de Atención al Cliente redacte respuestas.\n\nEl manual no cubre servicios internacionales, transporte de pasajeros, mudanzas de hogar ni envíos de paquetería a domicilio de personas particulares.\n\n## 2. Servicios disponibles\n\n| Servicio | Descripción | Unidad mínima de contratación |\n|---|---|---|\n| Carga completa (FTL) | Camión exclusivo para un solo cliente, de origen a destino sin trasbordo. | 1 viaje |\n| Carga consolidada (LTL) | Carga compartida con otros clientes en la misma unidad. | 1 pallet (hasta 1.000 kg) |\n| Transporte refrigerado | Unidades con equipo de frío y registro continuo de temperatura. | 1 viaje |\n| Almacenamiento en depósito | Guarda temporal en el centro de distribución de Pilar (Buenos Aires). | 10 posiciones de pallet por mes |\n\n## 3. Cotizaciones\n\n### 3.1 Datos necesarios para cotizar\n\nPara emitir una cotización, el cliente debe informar:\n- Origen y destino (localidad y código postal).\n- Tipo de carga y peso o volumen aproximado.\n- Frecuencia (viaje único o viajes por semana o por mes).\n- Requerimiento de temperatura, si corresponde.\n- Fecha estimada de inicio del servicio.\n\n### 3.2 Plazos y validez\n\nEl área comercial responde toda solicitud de cotización completa dentro de las 48 horas hábiles. Las cotizaciones tienen una validez de 15 días corridos desde su emisión; vencido ese plazo, deben actualizarse.\n\n### 3.3 Descuentos por volumen\n\n| Viajes por mes (FTL) | Descuento sobre tarifa de lista |\n|---|---|\n| 1 a 9 viajes | Sin descuento |\n| 10 a 39 viajes | 5 % |\n| 40 a 79 viajes | 8 % |\n| 80 viajes o más | 12 % (requiere contrato anual) |\n\n## 4. Plazos de entrega\n\nLos plazos se cuentan en horas hábiles desde que la carga es retirada en origen. No incluyen demoras por cortes de ruta, condiciones climáticas extremas o controles de autoridades.\n\n| Zona de destino | Provincias incluidas | Plazo de entrega |\n|---|---|---|\n| AMBA | CABA y Gran Buenos Aires | 24 horas hábiles |\n| Centro | Buenos Aires (interior), Córdoba, Santa Fe, Entre Ríos, La Pampa | 48 a 72 horas hábiles |\n| Cuyo | Mendoza, San Juan, San Luis | 72 a 96 horas hábiles |\n| NOA y NEA | Tucumán, Salta, Jujuy, Santiago del Estero, Catamarca, La Rioja, Corrientes, Misiones, Chaco, Formosa | 72 a 96 horas hábiles |\n| Patagonia | Neuquén, Río Negro, Chubut, Santa Cruz, Tierra del Fuego | 96 a 120 horas hábiles |\n\n## 5. Transporte refrigerado\n\n### 5.1 Rangos de temperatura\n\n| Régimen | Rango garantizado | Productos típicos |\n|---|---|---|\n| Congelado | -18 °C o menos | Carnes y pescados congelados, helados |\n| Refrigerado | Entre 2 °C y 8 °C | Frutas, verduras, lácteos, fiambres |\n| Temperatura controlada | Entre 15 °C y 25 °C | Chocolates, vinos, productos farmacéuticos de venta libre |\n\n### 5.2 Registro y constancia de temperatura\n\nCada unidad refrigerada lleva un registrador de datos (datalogger) que mide la temperatura cada 5 minutos. A pedido del cliente, la Empresa entrega el informe de temperatura del viaje dentro de las 24 horas posteriores a la entrega. La carga debe entregarse a la Empresa ya pre-enfriada a la temperatura del régimen contratado; la Empresa no responde por mercadería cargada fuera de rango.\n\n## 6. Reclamos por daños o faltantes\n\n### 6.1 Plazos para presentar un reclamo\n\n| Tipo de incidencia | Plazo para reclamar |\n|---|---|\n| Daño visible (embalaje roto, golpes, humedad) | Al momento de la entrega: debe dejarse asentado en el remito |\n| Daño oculto (detectado al abrir el embalaje) | Hasta 72 horas corridas desde la entrega |\n| Faltante de bultos | Hasta 24 horas corridas desde la entrega |\n| Corte de cadena de frío | Hasta 24 horas corridas desde la entrega, adjuntando la medición de temperatura al recibir |\n\n### 6.2 Documentación requerida\n\n- Número de remito o de guía.\n- Fotos de la mercadería y del embalaje.\n- Factura comercial de la mercadería afectada (para calcular el valor).\n\n### 6.3 Resolución\n\nAtención al Cliente confirma la recepción del reclamo en 1 día hábil y el área de Operaciones emite una resolución en un máximo de 10 días hábiles. Los reclamos presentados fuera de plazo se analizan, pero la Empresa no garantiza indemnización.\n\n## 7. Seguro y coberturas\n\n| Cobertura | Condiciones |\n|---|---|\n| Cobertura básica (incluida) | Hasta $ 5.000 por kilogramo de mercadería dañada o faltante, con un tope de $ 15.000.000 por viaje. |\n| Seguro adicional (opcional) | Cubre hasta el 100 % del valor declarado. Costo: 0,8 % del valor declarado de la carga. Debe contratarse antes del retiro. |\n\n### 7.1 Exclusiones\n\n- Embalaje insuficiente o inadecuado provisto por el cliente.\n- Vicio propio de la mercadería (por ejemplo, maduración natural de la fruta).\n- Mercadería cargada fuera del rango de temperatura del régimen contratado.\n- Daños indirectos, lucro cesante o multas comerciales del cliente.\n\n## 8. Mercadería no aceptada\n\nLa Empresa no transporta: explosivos y pirotecnia; armas y municiones; mercadería peligrosa clase 1 y 7 (según la normativa de mercancías peligrosas); animales vivos; dinero, valores o joyas; y cualquier mercadería sin la documentación fiscal obligatoria.\n\n## 9. Cancelaciones y reprogramaciones\n\n| Momento de la cancelación o reprogramación | Cargo |\n|---|---|\n| Más de 24 horas antes del retiro | Sin cargo |\n| Menos de 24 horas antes del retiro | 50 % de la tarifa del viaje |\n| Con la unidad ya presentada en origen (falso flete) | 100 % de la tarifa del viaje |\n\nLas reprogramaciones pedidas con más de 24 horas de anticipación se confirman sujetas a disponibilidad de unidades.\n\n## 10. Facturación y pagos\n\n- **Plazo de pago:** 30 días desde la fecha de factura.\n- **Medios de pago:** transferencia bancaria o cheque electrónico (e-cheq).\n- **Intereses por mora:** 3 % mensual sobre el saldo vencido.\n- **Clientes nuevos:** los primeros 3 viajes se abonan por adelantado, hasta que Finanzas apruebe la cuenta corriente.\n\n## 11. Atención al cliente\n\n| Canal | Disponibilidad |\n|---|---|\n| Email de soporte | Lunes a viernes de 8 a 18 h; respuesta dentro de 1 día hábil |\n| Teléfono de guardia operativa | Las 24 horas, solo para incidencias con viajes en curso |\n| Ejecutivo comercial asignado | Clientes con contrato anual (80 viajes por mes o más) |\n\n## Anexo A. Glosario\n\n- **FTL (Full Truck Load):** carga completa, un camión por cliente.\n- **LTL (Less than Truck Load):** carga consolidada con otros clientes.\n- **Falso flete:** viaje cancelado cuando la unidad ya se presentó en origen.\n- **Datalogger:** registrador electrónico de temperatura.\n- **Daño oculto:** daño que no se ve en el embalaje y se detecta al abrirlo.\n",
+              "type": "string"
+            },
+            {
+              "id": "2a1cd1b6-a50f-4d03-a247-ed63bb9c7260",
+              "name": "fuente",
+              "value": "MAN-SC-001 v3.1",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        400
+      ],
+      "id": "ca7dae41-8c8e-46a0-bbe9-a09be828316d",
+      "name": "Documento MAN-SC-001 v3.1 (limpio)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd05e243-1aff-4e7b-a86c-71bf1f0db7ab",
+              "name": "chunks",
+              "value": "={{ $json.manual.split(/\\n(?=## )/) }}",
+              "type": "array"
+            },
+            {
+              "id": "fad01e82-11a6-48fa-b84e-d1afa5915f0b",
+              "name": "fuente",
+              "value": "={{ $json.fuente }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        400
+      ],
+      "id": "f42fe7ee-a01b-45d8-8e3d-9cb0950711e8",
+      "name": "Fragmentar por sección"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "chunks",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "fuente",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        688,
+        400
+      ],
+      "id": "b67346cc-5ab9-48d4-9b73-497c9c6d7501",
+      "name": "Un ítem por sección"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "115b48c1-2f49-4d1f-bd9f-6dbdcdad0c3e",
+              "name": "seccion",
+              "value": "={{ $json.chunks.split('\\n')[0].replace(/^#+\\s*/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "67d71b96-9330-4411-b920-ac5201c1bd92",
+              "name": "texto",
+              "value": "={{ $json.chunks }}",
+              "type": "string"
+            },
+            {
+              "id": "a827b73e-be8d-428b-bfbf-382271e8f2dd",
+              "name": "fuente",
+              "value": "={{ $json.fuente }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        912,
+        400
+      ],
+      "id": "87f2e84f-4b13-475e-b9ae-c652d16c9e1b",
+      "name": "Preparar fragmento"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": "manual_politicas_logistica",
+        "clearStore": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        400
+      ],
+      "id": "e6efa985-06a4-4cdc-a585-7ba2631436f2",
+      "name": "Insertar en Vector Store"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        608
+      ],
+      "id": "c9a727d8-c25d-40f6-9471-3d76e5f876a2",
+      "name": "Embeddings Gemini (ingesta)",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "xqeJxQ3A504US7qY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.texto }}",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "seccion",
+                "value": "={{ $json.seccion }}"
+              },
+              {
+                "name": "fuente",
+                "value": "={{ $json.fuente }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1392,
+        576
+      ],
+      "id": "3e929a4d-734c-4a6c-b8fd-ba69cac334fc",
+      "name": "Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 1500,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        768
+      ],
+      "id": "d51ceb61-aca3-4363-a25a-c4f00eba9d94",
+      "name": "Splitter (1 sección = 1 chunk)"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "consulta"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        32,
+        1168
+      ],
+      "id": "f2c49713-84ca-4448-b572-1d15481cbbaf",
+      "name": "Entrada - Consulta RAG"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "08fe9e46-09ae-45a6-b377-cd97195fb968",
+              "name": "consulta",
+              "value": "={{ $json.consulta }}",
+              "type": "string"
+            },
+            {
+              "id": "1b19c880-fda3-44b3-aae6-383e55252974",
+              "name": "top_k",
+              "value": 3,
+              "type": "number"
+            },
+            {
+              "id": "132a6396-bd80-44ba-8898-801cdb4d444b",
+              "name": "min_score",
+              "value": 0.68,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        1168
+      ],
+      "id": "38cb2901-64a2-4d54-88a5-f012f7da5c39",
+      "name": "Parámetros RAG"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "memoryKey": "manual_politicas_logistica",
+        "prompt": "={{ $json.consulta }}",
+        "topK": "={{ $json.top_k }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.1,
+      "position": [
+        496,
+        1168
+      ],
+      "id": "8995f3b8-22fd-456c-aafb-e23aa091d226",
+      "name": "Buscar fragmentos (Top-K)"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        448,
+        1360
+      ],
+      "id": "1071aa6d-88f4-4d0f-8ab8-4db9ca9ce3f8",
+      "name": "Embeddings Gemini (consulta)",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "xqeJxQ3A504US7qY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "63be2eb1-599d-4479-85fe-b82f91270d7a",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": "={{ $('Parámetros RAG').first().json.min_score }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        1168
+      ],
+      "id": "9142f039-126f-4b32-b634-248a0db2c05b",
+      "name": "Minimum Score",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "055c5cf6-76ac-429e-8c3c-3b1cb4c7f87e",
+              "name": "resultado",
+              "value": "={{ (() => { const frs = $input.all().map(i => i.json).filter(j => j.document && j.score !== undefined); return frs.length ? frs.map((j, k) => `[Fragmento ${k + 1} | Fuente: ${j.document.metadata?.fuente || 'MAN-SC-001 v3.1'} | Sección: ${j.document.metadata?.seccion || 's/d'} | score ${Number(j.score).toFixed(2)}]\\n${j.document.pageContent}`).join('\\n\\n---\\n\\n') : 'SIN_FRAGMENTOS_RELEVANTES: ningún fragmento del manual superó el Minimum Score. Respondé \"No sé\".'; })() }}",
+              "type": "string"
+            },
+            {
+              "id": "d5b9eb0f-e88c-4a2f-baf2-50709732971b",
+              "name": "fragmentos_devueltos",
+              "value": "={{ $input.all().filter(i => i.json.document).length }}",
+              "type": "number"
+            },
+            {
+              "id": "64e084b1-0baa-4261-b712-d8b2d089c2ed",
+              "name": "scores",
+              "value": "={{ $input.all().filter(i => i.json.document).map(i => Number(i.json.score).toFixed(2)).join(', ') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        976,
+        1168
+      ],
+      "id": "1d93f214-bdb4-4c2f-9a8e-1e2e88055e3c",
+      "name": "Respuesta para el agente",
+      "executeOnce": true
+    }
+  ],
+  "pinData": {
+    "Entrada - Consulta RAG": [
+      {
+        "json": {
+          "consulta": "temperatura transporte fruta fresca"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Ejecutar Ingesta": {
+      "main": [
+        [
+          {
+            "node": "Documento MAN-SC-001 v3.1 (limpio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Documento MAN-SC-001 v3.1 (limpio)": {
+      "main": [
+        [
+          {
+            "node": "Fragmentar por sección",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fragmentar por sección": {
+      "main": [
+        [
+          {
+            "node": "Un ítem por sección",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Un ítem por sección": {
+      "main": [
+        [
+          {
+            "node": "Preparar fragmento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar fragmento": {
+      "main": [
+        [
+          {
+            "node": "Insertar en Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Gemini (ingesta)": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Insertar en Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insertar en Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Splitter (1 sección = 1 chunk)": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrada - Consulta RAG": {
+      "main": [
+        [
+          {
+            "node": "Parámetros RAG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parámetros RAG": {
+      "main": [
+        [
+          {
+            "node": "Buscar fragmentos (Top-K)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar fragmentos (Top-K)": {
+      "main": [
+        [
+          {
+            "node": "Minimum Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Minimum Score": {
+      "main": [
+        [
+          {
+            "node": "Respuesta para el agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Gemini (consulta)": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Buscar fragmentos (Top-K)",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "7a510954-f1f3-4fe9-a001-30e5746f3c5f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dc2317752fbeddd55700868013184d4e2c916e631002583d26a364857d065037"
+  },
+  "nodeGroups": [],
+  "id": "z8xJAUaWoWbjdkVo",
+  "tags": []
+}
