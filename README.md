@@ -4,7 +4,7 @@ Repositorio del proyecto integrador del curso **AI Automation Avanzado**. Contie
 
 ## Checkpoint 1 — Agente Base y Motor de Razonamiento
 
-**Archivo:** `checkpoint1_carla_baudino.json`
+**Archivo:** [`checkpoint1/checkpoint1_carla_baudino.json`](checkpoint1/checkpoint1_carla_baudino.json)
 
 ### Propósito operativo
 
