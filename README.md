@@ -13,7 +13,8 @@ Este es el repositorio del proyecto integrador del curso **AI Automation Avanzad
 | 3 | Memoria persistente | Memoria de largo plazo en Airtable por `Session_ID`, inyección de contexto con delimitadores y summarization a partir de 5 mensajes | [`checkpoint3/`](checkpoint3/) |
 | 4 | Integraciones reales | Canal de email: Gmail (OAuth2), HubSpot y Slack, con IF anti auto-reply, Look up antes del Create y borradores con aprobación humana | [`checkpoint4/`](checkpoint4/) |
 | 5 | RAG / conocimiento organizacional | Manual de políticas parseado con LlamaParse, base de vectores con Top-K y Minimum Score calibrados, citación de fuentes y regla "No sé" | [`checkpoint5/`](checkpoint5/) |
-| 6 → 11 | Voz, … Proyecto Final | Próximamente | — |
+| 6 | Voice AI (STT / TTS) | Canal de voz en Telegram: Whisper transcribe, el agente responde con RAG en 200 caracteres como máximo y ElevenLabs devuelve un audio; contingencia ante audios inválidos y purga del binario | [`checkpoint6/`](checkpoint6/) |
+| 7 → 11 | … Proyecto Final | Próximamente | — |
 
 **Convención del repo:** cada checkpoint vive en su propia carpeta, con una única copia de sus `.json` de n8n, su README y sus evidencias.
 
@@ -25,6 +26,7 @@ M2  Chat ─▶ Router de intención ─▶ Worker Leads / Worker Reclamos / esc
 M3  + memoria Airtable (lectura antes del router, escritura y resumen después de responder)
 M4  Email ─▶ IF anti auto-reply ─▶ AI Agent ─▶ HubSpot (Look up → Update/Create) ─▶ Borrador Gmail ─▶ Slack
 M5  + herramienta buscar_manual_politicas (RAG) conectada al AI Agent del canal email
+M6  Telegram (voz) ─▶ Whisper (STT) ─▶ IF contingencia ─▶ AI Agent + RAG (≤ 200) ─▶ ElevenLabs (TTS) ─▶ audio al chat
 ```
 
 ## Stack
@@ -39,6 +41,8 @@ M5  + herramienta buscar_manual_politicas (RAG) conectada al AI Agent del canal 
 | Mensajería del equipo | Slack (bot con `chat:write`) |
 | Parseo documental | LlamaParse (LlamaCloud) |
 | Embeddings / vectores | Google Gemini `gemini-embedding-001` · Simple Vector Store de n8n |
+| Voz | Whisper `whisper-large-v3` (Groq) para STT · ElevenLabs `eleven_multilingual_v2` para TTS |
+| Canal de chat | Telegram (bot) expuesto con ngrok |
 
 ## Cómo importar cualquier checkpoint
 
@@ -92,3 +96,8 @@ Canal de email con IF anti auto-reply, Look up en HubSpot antes de crear contact
 
 El agente de email consulta el manual de políticas de la empresa, parseado con LlamaParse y fragmentado por sección, a través de la herramienta `buscar_manual_politicas` (Top-K 3, Minimum Score 0,68). Responde solo con los fragmentos recuperados, cita la fuente y dice "No sé" cuando el dato no está. Prueba ciega: 4/5 aciertos documentales y 1 falla de contención corregida en el prompt.
 ➡️ [Ver carpeta checkpoint5](checkpoint5/)
+
+## Checkpoint 6 — Voice AI: Canal de Voz
+
+El cliente le habla al bot de Telegram con notas de voz. Whisper transcribe en español, un IF descarta audios vacíos o corruptos y pide repetir sin gastar IA, y el agente responde con el manual del Checkpoint 5 en 200 caracteres como máximo. ElevenLabs convierte la respuesta en audio (Multilingual v2, stability 0,65, clarity 0,8). El audio del cliente y el generado se purgan dentro del flujo, y las ejecuciones de producción no se guardan.
+➡️ [Ver carpeta checkpoint6](checkpoint6/)
