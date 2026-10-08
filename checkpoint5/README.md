@@ -32,10 +32,23 @@ AI Agent ─▶ buscar_manual_politicas ─▶ Top-K = 3 ─▶ Minimum Score �
 | 1 | ¿A cuántos grados llevan la fruta fresca? | ✅ 2–8 °C (sección 5.1) |
 | 2 | Cajas rotas adentro, detectadas 2 días después | ✅ Daño oculto, hasta 72 h (sección 6) |
 | 3 | Aviso a la mañana que no cargamos a la tarde | ✅ 50 % de la tarifa (sección 9) |
-| 4 | ¿Cuánto tarda hasta Bariloche? | ⚠️ Correcto (Patagonia, 96–120 h), pero infirió la provincia fuera del manual |
+| 4 | ¿Cuánto tarda hasta Bariloche? | ❌ **Falla de contención:** respondió "Patagonia, 96–120 h" deduciendo con conocimiento externo que Bariloche está en Río Negro. Como la localidad no aparece en los fragmentos, la respuesta esperada era "No sé" |
 | 5 | ¿Retiran los domingos? | ✅ "No sé" (sin fragmentos sobre el umbral) |
 
-Precisión: **5/5**, sin alucinaciones.
+### Métricas (corregidas tras la devolución docente)
+
+| Métrica | Resultado |
+|---|---|
+| Aciertos documentales (respuesta 100 % respaldada por los fragmentos) | **4/5 (80 %)** |
+| Fallas de contención (inferencia con conocimiento externo) | **1/5 (20 %)**, la pregunta 4 |
+| Aplicación correcta de la regla "No sé" | 1/1 |
+| Recuperación Top-1 correcta | 4/4 preguntas con respuesta en el manual |
+
+**Acción correctiva aplicada:** se agregó al System Prompt la regla *"No infieras ni completes datos que no estén escritos en los fragmentos, aunque los conozcas por otro lado (por ejemplo, ubicar una ciudad en una provincia o zona). En ese caso respondé 'No sé'"*. La misma regla se aplica al agente de voz del Checkpoint 6, que usa la misma herramienta.
+
+**Verificación:** con la regla nueva se repitió la pregunta 4 y el agente respondió *"No sé el tiempo exacto de entrega de un camión hasta Bariloche. Le derivamos su consulta al área correspondiente…"*, con `fuentes` vacío. La falla de contención quedó corregida.
+
+![Pregunta 4 corregida: No sé](evidencias/05_correccion_bariloche_no_se.png)
 
 ## Evidencias
 ![Parseo en LlamaParse](evidencias/01_llamaparse_titulos_tablas.png)
