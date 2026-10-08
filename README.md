@@ -90,5 +90,5 @@ Canal de email con IF anti auto-reply, Look up en HubSpot antes de crear contact
 
 ## Checkpoint 5 — RAG: Agente con Conocimiento Organizacional
 
-El agente de email consulta el manual de políticas de la empresa, parseado con LlamaParse y fragmentado por sección, a través de la herramienta `buscar_manual_politicas` (Top-K 3, Minimum Score 0,68). Responde solo con los fragmentos recuperados, cita la fuente y dice "No sé" cuando el dato no está. Precisión en la prueba ciega: 5/5.
+El agente de email consulta el manual de políticas de la empresa, parseado con LlamaParse y fragmentado por sección, a través de la herramienta `buscar_manual_politicas` (Top-K 3, Minimum Score 0,68). Responde solo con los fragmentos recuperados, cita la fuente y dice "No sé" cuando el dato no está. Prueba ciega: 4/5 aciertos documentales y 1 falla de contención corregida en el prompt.
 ➡️ [Ver carpeta checkpoint5](checkpoint5/)
