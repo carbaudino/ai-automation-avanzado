@@ -1,0 +1,313 @@
+{
+  "name": "Checkpoint 8 - Juez (AI-as-a-Judge)",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            },
+            {
+              "name": "contexto_airtable"
+            },
+            {
+              "name": "fragmentos_manual"
+            },
+            {
+              "name": "respuesta"
+            },
+            {
+              "name": "intento",
+              "type": "number"
+            },
+            {
+              "name": "arquitectura"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -128,
+        256
+      ],
+      "id": "db5004dd-25ce-4050-ae49-847aa854dd2d",
+      "name": "Entrada - Evaluación"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Evaluá este caso:\n{{ JSON.stringify({ query_original: $json.query, contexto_airtable: $json.contexto_airtable, fragmentos_manual: $json.fragmentos_manual, respuesta_propuesta: $json.respuesta }, null, 2) }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "# ROL\nSos el Juez de calidad (QA) de las respuestas del asistente de Atención al Cliente de Logística Demo S.A. No le respondés al cliente: evaluás la respuesta propuesta y devolvés solo el JSON del esquema.\n\n# QUÉ RECIBÍS\nUn JSON con: query_original (lo que preguntó el cliente), contexto_airtable (memoria del cliente guardada en Airtable), fragmentos_manual (lo que el agente recuperó del Manual MAN-SC-001) y respuesta_propuesta.\n\n# FUENTE DE VERDAD\nSolo fragmentos_manual y contexto_airtable. No uses conocimiento propio para dar por buena una respuesta: si un dato de la respuesta no está en esas fuentes, es DATO_NO_RESPALDADO aunque sea cierto en el mundo real.\nVerificación obligatoria antes de puntuar:\n- Lugares: una localidad está respaldada SOLO si su nombre aparece escrito en los fragmentos. Que pertenezca a una provincia o zona de la tabla NO alcanza: eso es una inferencia con conocimiento externo. Ejemplo: si preguntan por Rafaela, los fragmentos nombran Santa Fe pero no Rafaela, y la respuesta da el plazo de la zona Centro, entonces es DATO_NO_RESPALDADO, exactitud 2 y CORREGIR. Lo correcto es \"No sé\" más la derivación a un asesor.\n- Cálculos: una cuenta simple hecha con un dato de los fragmentos y un dato que dio el cliente (por ejemplo, aplicar el porcentaje del seguro al valor de la carga) SÍ está respaldada, aunque el resultado no aparezca escrito. Verificá que la cuenta esté bien hecha.\n\n# RÚBRICA: exactitud_factual (entero de 1 a 5)\n5 = Todos los datos coinciden con los fragmentos y responde lo que se preguntó. Si el dato no está en los fragmentos y la respuesta dice \"No sé\" y deriva a un asesor, también es 5.\n4 = Correcta y respaldada, con una omisión menor (un matiz o la derivación) que no induce a error.\n3 = Incompleta o ambigua, o no respeta el formato de voz (más de 200 caracteres, listas, markdown o emojis).\n2 = Incluye al menos un dato no respaldado o inferido (por ejemplo, ubicar una ciudad en una zona que los fragmentos no mencionan).\n1 = Contradice el manual; promete precios, descuentos, compensaciones o plazos que no figuran; responde fuera del ámbito de la empresa; o está vacía o es un mensaje de error.\n\n# estado_veredicto\nACEPTADO = exactitud 4 o 5.\nCORREGIR = exactitud 2 o 3 y el error se arregla reescribiendo con los fragmentos.\nRECHAZADO = exactitud 1, o cualquier promesa de dinero, precio o compensación, tema legal o datos de otro cliente.\n\n# categoria_error (una sola: la más grave)\nNINGUNO · DATO_INCORRECTO · DATO_NO_RESPALDADO · OMISION · FORMATO_VOZ · PROMESA_RIESGOSA · FUERA_DE_AMBITO\n\n# critica\nUna o dos frases concretas para que el agente corrija: qué está mal y qué dice el fragmento. Si el veredicto es ACEPTADO, escribí \"Sin observaciones\".\n\nDevolvé solo el JSON, sin texto adicional."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        128,
+        256
+      ],
+      "id": "69817fce-b79e-4bd2-8b67-6dc19e44260c",
+      "name": "Juez - LLM con JSON Schema",
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        80,
+        480
+      ],
+      "id": "075aaf54-4c88-407e-aeeb-2fc27a23f153",
+      "name": "Groq - Modelo Juez (gpt-oss-120b)",
+      "credentials": {
+        "groqApi": {
+          "id": "MHA9d0DnIvqS1WG2",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"exactitud_factual\": {\n      \"type\": \"integer\",\n      \"minimum\": 1,\n      \"maximum\": 5,\n      \"description\": \"Exactitud factual según la rúbrica, de 1 a 5\"\n    },\n    \"estado_veredicto\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"ACEPTADO\",\n        \"CORREGIR\",\n        \"RECHAZADO\"\n      ]\n    },\n    \"categoria_error\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"NINGUNO\",\n        \"DATO_INCORRECTO\",\n        \"DATO_NO_RESPALDADO\",\n        \"OMISION\",\n        \"FORMATO_VOZ\",\n        \"PROMESA_RIESGOSA\",\n        \"FUERA_DE_AMBITO\"\n      ]\n    },\n    \"critica\": {\n      \"type\": \"string\",\n      \"description\": \"Qué corregir, en una o dos frases\"\n    }\n  },\n  \"required\": [\n    \"exactitud_factual\",\n    \"estado_veredicto\",\n    \"categoria_error\",\n    \"critica\"\n  ],\n  \"additionalProperties\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        480
+      ],
+      "id": "8142de81-f916-4ac9-a62d-da6647942d0d",
+      "name": "Esquema JSON del veredicto"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7f67761-e0df-4080-b855-ff2277dfa52e",
+              "name": "exactitud_factual",
+              "value": "={{ $json.output.exactitud_factual }}",
+              "type": "number"
+            },
+            {
+              "id": "c8c81cf9-0106-4ad0-872c-2a998d49fbf9",
+              "name": "estado_veredicto",
+              "value": "={{ $json.output.estado_veredicto }}",
+              "type": "string"
+            },
+            {
+              "id": "35d7131c-adfa-4d43-99e8-f5e3870c75cd",
+              "name": "categoria_error",
+              "value": "={{ $json.output.categoria_error }}",
+              "type": "string"
+            },
+            {
+              "id": "a9491dad-23ea-4a4d-972b-62bb805dd653",
+              "name": "critica",
+              "value": "={{ $json.output.critica }}",
+              "type": "string"
+            },
+            {
+              "id": "42182285-bbd8-4dbd-a5b1-85c0ddf69550",
+              "name": "query",
+              "value": "={{ $('Entrada - Evaluación').item.json.query }}",
+              "type": "string"
+            },
+            {
+              "id": "640601d0-7619-4c9d-8743-a47ca355b0a4",
+              "name": "respuesta",
+              "value": "={{ $('Entrada - Evaluación').item.json.respuesta }}",
+              "type": "string"
+            },
+            {
+              "id": "ba5f8f0e-f707-4972-bd9c-23f5d8781c65",
+              "name": "intento",
+              "value": "={{ $('Entrada - Evaluación').item.json.intento ?? 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "6b4e10ae-e265-4a99-918c-75944db350b4",
+              "name": "arquitectura",
+              "value": "={{ $('Entrada - Evaluación').item.json.arquitectura }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        160
+      ],
+      "id": "9bb7d953-cca8-4d8b-a3f0-2b1faa6ab87f",
+      "name": "Veredicto del Juez"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79b9f030-f385-4700-b99f-16f0ce60a1b0",
+              "name": "exactitud_factual",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "0f71b5c0-fab4-49fe-8330-1aaac80f1d94",
+              "name": "estado_veredicto",
+              "value": "RECHAZADO",
+              "type": "string"
+            },
+            {
+              "id": "798d78fe-82ca-4c88-95e9-ff5d8eb25c45",
+              "name": "categoria_error",
+              "value": "ERROR_JUEZ",
+              "type": "string"
+            },
+            {
+              "id": "39f206eb-50de-4fc0-ac03-5b97b4b768dc",
+              "name": "critica",
+              "value": "El Juez no devolvió un JSON válido: revisión humana obligatoria.",
+              "type": "string"
+            },
+            {
+              "id": "e92d5f28-8a9c-4856-9e33-9503477c10d3",
+              "name": "query",
+              "value": "={{ $('Entrada - Evaluación').item.json.query }}",
+              "type": "string"
+            },
+            {
+              "id": "cb238da2-e491-48dc-9ba6-b3045eb77f83",
+              "name": "respuesta",
+              "value": "={{ $('Entrada - Evaluación').item.json.respuesta }}",
+              "type": "string"
+            },
+            {
+              "id": "77337700-2fcf-4ed9-8594-1ab584071448",
+              "name": "intento",
+              "value": "={{ $('Entrada - Evaluación').item.json.intento ?? 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "5b69c626-47ed-4b54-b9f3-b178c8c769c5",
+              "name": "arquitectura",
+              "value": "={{ $('Entrada - Evaluación').item.json.arquitectura }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        384
+      ],
+      "id": "62291149-9be7-4eae-ba46-73e5cf2e0e99",
+      "name": "Veredicto por falla del Juez"
+    },
+    {
+      "parameters": {
+        "content": "## Juez (AI-as-a-Judge)\nRecibe query + contexto de Airtable + fragmentos del manual + respuesta propuesta. Devuelve SIEMPRE el mismo JSON (Structured Output Parser con JSON Schema). Si el Juez falla, la salida de error arma un veredicto RECHAZADO: el Switch nunca recibe texto libre.",
+        "height": 180,
+        "width": 760,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        -64
+      ],
+      "id": "3e1fc559-8020-43ab-8c18-f21ebd493788",
+      "name": "Nota d752"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Entrada - Evaluación": {
+      "main": [
+        [
+          {
+            "node": "Juez - LLM con JSON Schema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Juez - LLM con JSON Schema": {
+      "main": [
+        [
+          {
+            "node": "Veredicto del Juez",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Veredicto por falla del Juez",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq - Modelo Juez (gpt-oss-120b)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Juez - LLM con JSON Schema",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Esquema JSON del veredicto": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Juez - LLM con JSON Schema",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ce47f2d4-7b1d-4e93-a0ba-0cbfc2ff95a3",
+  "meta": {
+    "instanceId": "dc2317752fbeddd55700868013184d4e2c916e631002583d26a364857d065037"
+  },
+  "nodeGroups": [],
+  "id": "qD4LotNbPGpKdsvE",
+  "tags": []
+}
