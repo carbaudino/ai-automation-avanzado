@@ -2,7 +2,7 @@
 
 **Alumna:** Carla Baudino
 
-Este es el repositorio del proyecto integrador del curso **AI Automation Avanzado**: un agente de atención comercial y operativa para una empresa de transporte y logística (**Logística Demo S.A.**, ficticia), construido en **n8n**. Cada checkpoint parte del anterior y le suma una capacidad nueva, hasta llegar al Proyecto Final (M11).
+Este es el repositorio del proyecto integrador del curso **AI Automation Avanzado**: un agente de atención comercial y operativa para una empresa de transporte y logística (**Logística Demo S.A.**, ficticia), construido en **n8n**. Cada checkpoint parte del anterior y le suma una capacidad nueva, hasta llegar al Proyecto Final (M11), que integra todo en un solo sistema supervisado.
 
 ## Índice de checkpoints
 
@@ -17,7 +17,8 @@ Este es el repositorio del proyecto integrador del curso **AI Automation Avanzad
 | 7 | Diseño de sistema agéntico vertical | Documento de diseño para Customer Service & Sales Ops en logística: orquestador + 4 especialistas, mapa de permisos, semáforo de riesgo HITL y scorecards | [`checkpoint7/`](checkpoint7/) |
 | 8 | QA automatizado con AI-as-a-Judge | Juez LLM con JSON Schema sobre el canal de voz, Switch Aceptar / Corregir (Self-Healing) / Escalar (Slack Aprobar · Editar), auditoría en Airtable y test A/B de 10 corridas | [`checkpoint8/`](checkpoint8/) |
 | 9 | Gobernanza y monitoreo financiero | KPIs, ROI y TCO del canal de voz; traceId propagado por el RAG y el Juez con logs JSON en Airtable; mapa de riesgos, prompt de objetividad y privacidad (Zero Data Retention) | [`checkpoint9/`](checkpoint9/) |
-| 10 → 11 | … Proyecto Final | Próximamente | — |
+| 10 | Propuesta técnico-comercial | Brochure para el comité: narrativa de valor, roadmap por horizontes, modelo comercial (implementación + retainer + success fee) y plan de 30 días | [`checkpoint10/`](checkpoint10/) |
+| 11 | Proyecto Final | Próximamente | — |
 
 **Convención del repo:** cada checkpoint vive en su propia carpeta, con una única copia de sus `.json` de n8n, su README y sus evidencias.
 
@@ -33,6 +34,7 @@ M6  Telegram (voz) ─▶ Whisper (STT) ─▶ IF contingencia ─▶ AI Agent +
 M7  (diseño) Orquestador ─▶ Leads · Consultas RAG · Reclamos · Auditor de churn ─▶ Semáforo de salida (verde / amarillo / rojo)
 M8  AI Agent ─▶ Juez (JSON Schema) ─▶ Airtable Auditoria_QA + Switch: ACEPTADO ─▶ voz · CORREGIR ─▶ reintento · RECHAZADO ─▶ Slack
 M9  + traceId (TR-<ejecución>-<mensaje>) ─▶ RAG ─▶ Juez ─▶ Airtable (traceId + Log_JSON) · prompt de objetividad
+M10 (comercial) Propuesta de valor, modelo de precios y plan de implementación
 ```
 
 ## Stack
@@ -122,3 +124,8 @@ Un Juez LLM (Groq `gpt-oss-120b` con Structured Output Parser) evalúa cada resp
 
 Plan de gobernanza del canal de voz supervisado. KPIs (83 % de resolución autónoma en el piloto), ROI contra el baseline manual (USD 945 por mes de ahorro, 547 % de ROI mensual), TCO mensual con estrategias de contención y límites de gasto por entorno. Un traceId único viaja por el RAG y el Juez hasta Airtable con un log JSON (timestamp, nodeName, toolOutput, systemPromptSnapshot, confidenceScore) y permitió una auditoría retroactiva real. El informe cierra con el mapa de riesgos, la sección de objetividad del prompt y la privacidad del proveedor (Zero Data Retention en Groq).
 ➡️ [Ver carpeta checkpoint9](checkpoint9/)
+
+## Checkpoint 10 — Propuesta Técnico-Comercial
+
+Brochure para un comité de dirección: el problema en términos de negocio, la arquitectura de valor (Coordinador, especialistas, Supervisor y una persona a cargo de lo sensible), el roadmap por horizontes y el modelo comercial. El modelo combina una implementación de USD 1.200, un retainer de USD 180 por mes y un success fee por consulta resuelta, con un recupero de 2,3 meses para el cliente. Cierra con el plan de implementación a 30 días y la trazabilidad de metadatos en el CRM.
+➡️ [Ver carpeta checkpoint10](checkpoint10/)
